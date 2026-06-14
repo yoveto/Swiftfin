@@ -11,7 +11,7 @@ import SwiftUI
 
 // TODO: Migrate to single `header: View`
 
-struct PosterHStack<Element: Poster, Data: Collection>: View where Data.Element == Element, Data.Index == Int {
+struct PosterHStack<Element: Poster, Data: RandomAccessCollection>: View where Data.Element == Element, Data.Index == Int {
 
     private var data: Data
     private var header: () -> any View
@@ -38,24 +38,21 @@ struct PosterHStack<Element: Poster, Data: Collection>: View where Data.Element 
 
     @ViewBuilder
     private var stack: some View {
-        CollectionHStack(
-            uniqueElements: data,
-            layout: layout
-        ) { item in
-            PosterButton(
-                item: item,
-                type: type
-            ) { namespace in
-                action(item, namespace)
-            } label: {
-                label(item).eraseToAnyView()
-            }
-        }
-        .clipsToBounds(false)
-        .dataPrefix(20)
-        .insets(horizontal: EdgeInsets.edgePadding)
-        .itemSpacing(EdgeInsets.edgePadding / 2)
-        .scrollBehavior(.continuousLeadingEdge)
+        // TODO: @yoveto - iphone layout support
+        ScrollView(.horizontal) {
+            HStack {
+                ForEach(data) { item in
+                    PosterButton(
+                        item: item,
+                        type: type
+                    ) { namespace in
+                        action(item, namespace)
+                    } label: {
+                        label(item).eraseToAnyView()
+                    }.frame(width: type == .landscape ? 220 : 140).clipped()
+                }
+            }.padding(EdgeInsets.edgeInsets)
+        }.scrollIndicators(.never)
     }
 
     var body: some View {

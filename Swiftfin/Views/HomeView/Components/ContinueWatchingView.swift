@@ -32,44 +32,45 @@ extension HomeView {
         }
 
         var body: some View {
-            CollectionHStack(
-                uniqueElements: viewModel.resumeItems,
-                columns: columnCount
-            ) { item in
-                PosterButton(
-                    item: item,
-                    type: .landscape
-                ) { namespace in
-                    router.route(to: .item(item: item), in: namespace)
-                } label: {
-                    if item.type == .episode {
-                        PosterButton.EpisodeContentSubtitleContent(item: item)
-                    } else {
-                        PosterButton.TitleSubtitleContentView(item: item)
+
+            // TODO: @yoveto - iphone layout support
+            ScrollView(.horizontal) {
+                HStack {
+                    ForEach(viewModel.resumeItems) { item in
+                        PosterButton(
+                            item: item,
+                            type: .landscape
+                        ) { namespace in
+                            router.route(to: .item(item: item), in: namespace)
+                        } label: {
+                            if item.type == .episode {
+                                PosterButton.EpisodeContentSubtitleContent(item: item)
+                            } else {
+                                PosterButton.TitleSubtitleContentView(item: item)
+                            }
+                        }.frame(width: min(max(UIScreen.main.bounds.width, UIScreen.main.bounds.height) / 2.5, 400)).clipped()
+                    }
+                }.padding(EdgeInsets.edgeInsets)
+            }.scrollIndicators(.never)
+                .contextMenu(for: BaseItemDto.self) { item in
+                    Button {
+                        viewModel.send(.setIsPlayed(true, item))
+                    } label: {
+                        Label(L10n.played, systemImage: "checkmark.circle")
+                    }
+
+                    Button(role: .destructive) {
+                        viewModel.send(.setIsPlayed(false, item))
+                    } label: {
+                        Label(L10n.unplayed, systemImage: "minus.circle")
                     }
                 }
-            }
-            .clipsToBounds(false)
-            .scrollBehavior(.continuousLeadingEdge)
-            .contextMenu(for: BaseItemDto.self) { item in
-                Button {
-                    viewModel.send(.setIsPlayed(true, item))
-                } label: {
-                    Label(L10n.played, systemImage: "checkmark.circle")
+                .posterOverlay(for: BaseItemDto.self) { item in
+                    LandscapePosterProgressBar(
+                        title: item.progressLabel ?? L10n.continue,
+                        progress: (item.userData?.playedPercentage ?? 0) / 100
+                    )
                 }
-
-                Button(role: .destructive) {
-                    viewModel.send(.setIsPlayed(false, item))
-                } label: {
-                    Label(L10n.unplayed, systemImage: "minus.circle")
-                }
-            }
-            .posterOverlay(for: BaseItemDto.self) { item in
-                LandscapePosterProgressBar(
-                    title: item.progressLabel ?? L10n.continue,
-                    progress: (item.userData?.playedPercentage ?? 0) / 100
-                )
-            }
         }
     }
 }
